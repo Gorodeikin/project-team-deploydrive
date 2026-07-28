@@ -14,14 +14,16 @@ export const apiClient = axios.create({
   timeout: API_TIMEOUT_MS,
 });
 
-// --- ROUTES that must NOT receive Authorization header
+// --- ROUTES that must NOT receive Authorization header and must NOT trigger a refresh retry
 const AUTH_WHITELIST = ['/auth/login', '/auth/register', '/auth/refresh'];
+
+function isAuthRoute(url?: string): boolean {
+  return AUTH_WHITELIST.some(p => url?.includes(p));
+}
 
 // ====== REQUEST: добавляем accessToken (кроме auth) ======
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const isAuthRoute = AUTH_WHITELIST.some(p => config.url?.includes(p));
-
-  if (!isAuthRoute && typeof window !== 'undefined') {
+  if (!isAuthRoute(config.url) && typeof window !== 'undefined') {
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers = config.headers ?? {};
@@ -62,6 +64,7 @@ apiClient.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
+      !isAuthRoute(originalRequest.url) &&
       typeof window !== 'undefined'
     ) {
       originalRequest._retry = true;

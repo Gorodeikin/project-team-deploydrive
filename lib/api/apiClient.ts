@@ -6,14 +6,12 @@ import axios, {
   type AxiosRequestConfig,
   type InternalAxiosRequestConfig,
 } from 'axios';
-
-const baseURL =
-  (process.env.NEXT_PUBLIC_API_URL || 'https://travellers-node.onrender.com') +
-  '/api';
+import { API_BASE_URL, API_TIMEOUT_MS } from './config';
 
 export const apiClient = axios.create({
-  baseURL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
+  timeout: API_TIMEOUT_MS,
 });
 
 // --- ROUTES that must NOT receive Authorization header

@@ -2,6 +2,7 @@ import { apiClient } from './apiClient';
 import type { User } from '@/types/user';
 import type { PaginatedStoriesResponse, Story } from '@/types/story';
 import axios from 'axios';
+import { API_BASE_URL, API_TIMEOUT_MS } from './config';
 
 export const authService = {
   async getSession(): Promise<User | null> {
@@ -14,14 +15,10 @@ export const authService = {
   },
 };
 
-const baseURL =
-  (process.env.NEXT_PUBLIC_API_URL ||
-    process.env.API_BASE_URL ||
-    'https://travellers-node.onrender.com') + '/api';
-
 export const clientApi = axios.create({
-  baseURL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
+  timeout: API_TIMEOUT_MS,
 });
 
 clientApi.interceptors.request.use(config => {

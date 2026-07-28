@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { apiClient } from '@/lib/api/apiClient';
 import OurTravellersList from '../OurTravellers/OurTravellersList';
 import styles from './OurTravellers.module.css';
 import cn from 'classnames';
@@ -17,16 +17,13 @@ export default function OurTravellers() {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const API_URL =
-    process.env.NEXT_PUBLIC_API_URL || 'https://travellers-node.onrender.com';
-
   const fetchTravellers = async () => {
     if (loading || !hasMore) return;
 
     setLoading(true);
 
     try {
-      const res = await axios.get(`${API_URL}/api/users`, {
+      const res = await apiClient.get('/users', {
         params: {
           page,
           perPage: page === 1 ? INITIAL : LOAD,

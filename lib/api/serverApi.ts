@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { API_ORIGIN, API_TIMEOUT_MS } from './config';
 
 export const serverApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? '',
+  baseURL: API_ORIGIN,
+  timeout: API_TIMEOUT_MS,
 });
 
 import { apiClient } from './api';

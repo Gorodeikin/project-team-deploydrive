@@ -2,7 +2,6 @@
 
 import TanStackProvider from '@/components/TanStackProvider/TanStackProvider';
 import AuthProvider from '@/components/AuthProvider/AuthProvider';
-import AuthProfileEditProvider from '@/components/AuthProfileEditProvider/AuthProfileEditProvider';
 
 export default function AuthLayout({
   children,
@@ -11,9 +10,7 @@ export default function AuthLayout({
 }) {
   return (
     <TanStackProvider>
-      <AuthProvider>
-        <AuthProfileEditProvider>{children}</AuthProfileEditProvider>
-      </AuthProvider>
+      <AuthProvider>{children}</AuthProvider>
     </TanStackProvider>
   );
 }

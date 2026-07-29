@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
-import { clientApi } from '@/lib/api/clientApi';
+import { apiClient } from '@/lib/api/apiClient';
 import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 import styles from './StorySavePanel.module.css';
 
@@ -39,8 +39,8 @@ export default function StorySavePanel({ storyId, ownerId }: Props) {
 
     try {
       const response = isSaved
-        ? await clientApi.delete(`/users/me/saved/${storyId}`)
-        : await clientApi.post(`/users/me/saved/${storyId}`);
+        ? await apiClient.delete(`/users/me/saved/${storyId}`)
+        : await apiClient.post(`/users/me/saved/${storyId}`);
 
       const updatedUser = response.data?.data;
       if (updatedUser) {

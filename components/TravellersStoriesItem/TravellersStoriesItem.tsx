@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
@@ -10,11 +10,7 @@ import styles from './TravellersStoriesItem.module.css';
 import { Story } from '@/types/story';
 import { Traveller } from '@/types/traveller';
 import { useAuthStore } from '@/lib/store/authStore';
-import {
-  favouriteAdd,
-  favouriteRemove,
-  updateStoryLikes,
-} from '@/lib/api/clientApi';
+import { apiClient } from '@/lib/api/apiClient';
 import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import Loader from '../Loader/Loader';
 
@@ -44,7 +40,13 @@ const fetchUserById = async (id: string): Promise<Traveller> => {
 
 export default function TravellersStoriesItem({ story, travellersMap }: Props) {
   const router = useRouter();
-  const { user, isAuthenticated, setUser } = useAuthStore();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { user, isAuthenticated, isAuthReady, setUser } = useAuthStore();
+
+  const query = searchParams.toString();
+  const returnPath = query ? `${pathname}?${query}` : pathname;
+  const encodedReturnPath = encodeURIComponent(returnPath);
 
   const authorFromMap = travellersMap?.get(story.ownerId);
 
@@ -60,7 +62,6 @@ export default function TravellersStoriesItem({ story, travellersMap }: Props) {
   const isOwner = user?._id === story.ownerId;
   const isSaved = user?.savedStories?.includes(story._id) ?? false;
 
-  const [likes, setLikes] = useState(story.favoriteCount ?? 0);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const openLoginModal = () => setIsLoginModalOpen(true);
@@ -69,41 +70,30 @@ export default function TravellersStoriesItem({ story, travellersMap }: Props) {
   const categoryName =
     categories.find(c => c._id === story.category)?.name || 'Категорія';
 
-  const addFavMutation = useMutation({
-    mutationFn: async () =>
-      Promise.all([
-        favouriteAdd(story._id),
-        updateStoryLikes(story._id, String(likes + 1)),
-      ]),
-    onSuccess: ([_, updated]) => {
-      if (!user) return;
-      const currentSaved = user.savedStories || [];
-      setUser({ ...user, savedStories: [...currentSaved, story._id] });
-      setLikes(updated?.data?.favoriteCount ?? likes + 1);
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      return isSaved
+        ? apiClient.delete(`/users/me/saved/${story._id}`)
+        : apiClient.post(`/users/me/saved/${story._id}`);
     },
-    onError: error => console.error(error),
-  });
+    onSuccess: response => {
+      const updatedUser = response.data?.data;
 
-  const removeFavMutation = useMutation({
-    mutationFn: async () =>
-      Promise.all([
-        favouriteRemove(story._id),
-        updateStoryLikes(story._id, String(likes - 1)),
-      ]),
-    onSuccess: ([_, updated]) => {
-      if (!user) return;
-      const currentSaved = user.savedStories || [];
-      setUser({
-        ...user,
-        savedStories: currentSaved.filter(id => id !== story._id),
-      });
-      setLikes(updated?.data?.favoriteCount ?? likes - 1);
+      if (updatedUser) {
+        setUser(updatedUser);
+      }
     },
-    onError: error => console.error(error),
+    onError: () => {
+      console.error('Failed to update saved story');
+    },
   });
 
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthReady) return;
+
     if (isOwner) {
       router.push(`/stories/edit/${story._id}`);
       return;
@@ -112,18 +102,18 @@ export default function TravellersStoriesItem({ story, travellersMap }: Props) {
       openLoginModal();
       return;
     }
-    if (addFavMutation.isPending || removeFavMutation.isPending) return;
-    isSaved ? removeFavMutation.mutate() : addFavMutation.mutate();
+    if (saveMutation.isPending) return;
+    saveMutation.mutate();
   };
 
   const handleLogin = () => {
-    router.push('/auth/login');
     closeLoginModal();
+    router.push(`/auth/login?next=${encodedReturnPath}`);
   };
 
   const handleRegister = () => {
-    router.push('/auth/register');
     closeLoginModal();
+    router.push(`/auth/register?next=${encodedReturnPath}`);
   };
 
   const formatDate = (d: string) => {
@@ -145,7 +135,13 @@ export default function TravellersStoriesItem({ story, travellersMap }: Props) {
   const authorAvatar =
     author?.avatarUrl || story.avatar || '/images/avatar.webp.webp';
 
-  const isLoading = addFavMutation.isPending || removeFavMutation.isPending;
+  const isLoading = saveMutation.isPending;
+
+  const bookmarkLabel = isOwner
+    ? 'Редагувати історію'
+    : isSaved
+      ? 'Видалити зі збережених'
+      : 'Зберегти історію';
 
   return (
     <article className={styles.card}>
@@ -183,7 +179,7 @@ export default function TravellersStoriesItem({ story, travellersMap }: Props) {
             <div className={styles.autorWrapp}>
               <span className={styles.date}>{formatDate(story.date)}</span>
               <span className={styles.dot}>&#183;</span>
-              <span className={styles.save}>{likes}</span>
+              <span className={styles.save}>{story.favoriteCount ?? 0}</span>
               <svg width="24" height="24" className={styles.bookmarkLittle}>
                 <use href="/icons.svg#icon-bookmark" />
               </svg>
@@ -202,8 +198,10 @@ export default function TravellersStoriesItem({ story, travellersMap }: Props) {
               isSaved && !isOwner ? styles.favorButtonPush : ''
             }`}
             type="button"
-            disabled={!isOwner && isLoading}
-            title={isOwner ? 'Редагувати' : isSaved ? 'Видалити' : 'Зберегти'}
+            disabled={!isOwner && (!isAuthReady || isLoading)}
+            aria-pressed={!isOwner ? isSaved : undefined}
+            aria-label={bookmarkLabel}
+            title={bookmarkLabel}
           >
             <svg width="24" height="24" className={styles.bookmark}>
               <use
@@ -229,6 +227,7 @@ export default function TravellersStoriesItem({ story, travellersMap }: Props) {
           cancelButtonText="Увійти"
           onConfirm={handleRegister}
           onCancel={handleLogin}
+          onClose={closeLoginModal}
         />
       )}
     </article>

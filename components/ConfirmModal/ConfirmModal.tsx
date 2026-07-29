@@ -9,6 +9,7 @@ interface ConfirmModalProps {
   cancelButtonText?: string;
   onCancel?: () => void;
   onConfirm?: () => void;
+  onClose?: () => void;
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -18,16 +19,19 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   cancelButtonText = "Відмінити",
   onCancel,
   onConfirm,
+  onClose,
 }) => {
+  const handleDismiss = onClose ?? onCancel;
+
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onCancel?.();
+        handleDismiss?.();
       }
     };
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
-  }, [onCancel]);
+  }, [handleDismiss]);
 
   useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
@@ -40,7 +44,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   // Закриття по кліку на бекдроп
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
-      onCancel?.();
+      handleDismiss?.();
     }
   };
 
@@ -63,7 +67,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         {/* Іконка закриття */}
         <button
           className={styles.closeButton}
-          onClick={onCancel}
+          onClick={handleDismiss}
           aria-label="Закрити"
         >
           <img src="/icons/Vector.svg" alt="Закрити" width={14} height={14} />

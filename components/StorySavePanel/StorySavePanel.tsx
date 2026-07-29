@@ -53,14 +53,17 @@ export default function StorySavePanel({ storyId, ownerId }: Props) {
     }
   };
 
+  const returnPath = `/stories/${storyId}`;
+  const encodedReturnPath = encodeURIComponent(returnPath);
+
   const handleConfirmRegister = () => {
     setIsConfirmOpen(false);
-    router.push('/auth/register');
+    router.push(`/auth/register?next=${encodedReturnPath}`);
   };
 
   const handleCancelLogin = () => {
     setIsConfirmOpen(false);
-    router.push('/auth/login');
+    router.push(`/auth/login?next=${encodedReturnPath}`);
   };
 
   const handleCloseModal = () => {

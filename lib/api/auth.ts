@@ -2,21 +2,6 @@
 import { apiClient } from './apiClient';
 import type { User } from '@/types/user';
 
-export const register = async (data: {
-  name: string;
-  email: string;
-  password: string;
-}): Promise<User> => {
-  const r = await apiClient.post('/auth/register', data);
-
-  const token = r.data?.data?.accessToken;
-  if (token && typeof window !== 'undefined') {
-    localStorage.setItem('accessToken', token);
-  }
-
-  return r.data?.data?.user ?? r.data?.data ?? r.data;
-};
-
 export const login = async (data: {
   email: string;
   password: string;
@@ -24,11 +9,39 @@ export const login = async (data: {
   const r = await apiClient.post('/auth/login', data);
 
   const token = r.data?.data?.accessToken;
-  if (token && typeof window !== 'undefined') {
+  if (typeof token !== 'string' || token.length === 0) {
+    throw new Error('Login failed: no access token received');
+  }
+
+  if (typeof window !== 'undefined') {
     localStorage.setItem('accessToken', token);
   }
 
-  return r.data?.data?.user ?? r.data?.data ?? r.data;
+  try {
+    const meRes = await apiClient.get('/users/me/profile');
+    const user = meRes.data?.data?.user ?? meRes.data?.data;
+
+    if (!user) {
+      throw new Error('Login failed: unable to load user profile');
+    }
+
+    return user;
+  } catch (err) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('accessToken');
+    }
+    throw err;
+  }
+};
+
+export const register = async (data: {
+  name: string;
+  email: string;
+  password: string;
+}): Promise<User> => {
+  await apiClient.post('/auth/register', data);
+
+  return login({ email: data.email, password: data.password });
 };
 
 export const logout = async () => {

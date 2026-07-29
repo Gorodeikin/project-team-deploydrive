@@ -23,7 +23,11 @@ const schema = Yup.object({
     .required('Введіть пароль'),
 });
 
-export default function RegistrationForm() {
+export default function RegistrationForm({
+  returnPath,
+}: {
+  returnPath: string;
+}) {
   const router = useRouter();
   const setUser = useAuthStore(s => s.setUser);
 
@@ -36,7 +40,7 @@ export default function RegistrationForm() {
     onSuccess: user => {
       setUser(user);
       toast.success(`Вітаємо, ${user.name}! 🎉`);
-      router.replace('/');
+      router.replace(returnPath);
     },
     onError: error => {
       const msg = error.response?.data?.message || 'Помилка реєстрації';

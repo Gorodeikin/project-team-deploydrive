@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { API_BASE_URL } from '@/lib/api/config';
-import AuthProvider from '@/components/AuthProvider/AuthProvider';
 import TravellersStoriesItem from '@/components/TravellersStoriesItem/TravellersStoriesItem';
 import StorySavePanel from '@/components/StorySavePanel/StorySavePanel';
 import type { Story } from '@/types/story';
@@ -176,9 +175,7 @@ export default async function StoryDetailPage({ params }: PageProps) {
             <p className={styles.articleText}>{story.article}</p>
           </section>
 
-          <AuthProvider>
-            <StorySavePanel storyId={story._id} ownerId={story.ownerId} />
-          </AuthProvider>
+          <StorySavePanel storyId={story._id} ownerId={story.ownerId} />
         </div>
       </div>
 

@@ -8,15 +8,26 @@ import styles from './AuthPage.module.css';
 import LoginForm from './LoginForm';
 import RegistrationForm from './RegistrationForm';
 
-export default function AuthPage({ type }: { type: 'login' | 'register' }) {
+export default function AuthPage({
+  type,
+  returnPath,
+}: {
+  type: 'login' | 'register';
+  returnPath: string;
+}) {
   const router = useRouter();
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   const isAuthReady = useAuthStore(s => s.isAuthReady);
 
   useEffect(() => {
     if (!isAuthReady) return;
-    if (isAuthenticated) router.replace('/');
-  }, [isAuthenticated, isAuthReady, router]);
+    if (isAuthenticated) router.replace(returnPath);
+  }, [isAuthenticated, isAuthReady, returnPath, router]);
+
+  const buildAuthHref = (route: '/auth/login' | '/auth/register') =>
+    returnPath === '/'
+      ? route
+      : `${route}?next=${encodeURIComponent(returnPath)}`;
 
   if (!isAuthReady) return null;
 
@@ -26,13 +37,13 @@ export default function AuthPage({ type }: { type: 'login' | 'register' }) {
         <div className={styles.authWrapper}>
           <div className={styles.tabsWrapper}>
             <Link
-              href="/auth/register"
+              href={buildAuthHref('/auth/register')}
               className={`${styles.tab} ${type === 'register' ? styles.active : ''}`}
             >
               Реєстрація
             </Link>
             <Link
-              href="/auth/login"
+              href={buildAuthHref('/auth/login')}
               className={`${styles.tab} ${type === 'login' ? styles.active : ''}`}
             >
               Вхід
@@ -53,7 +64,11 @@ export default function AuthPage({ type }: { type: 'login' | 'register' }) {
             </>
           )}
 
-          {type === 'login' ? <LoginForm /> : <RegistrationForm />}
+          {type === 'login' ? (
+            <LoginForm returnPath={returnPath} />
+          ) : (
+            <RegistrationForm returnPath={returnPath} />
+          )}
         </div>
       </div>
     </section>

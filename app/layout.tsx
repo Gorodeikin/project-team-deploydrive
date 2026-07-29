@@ -5,6 +5,7 @@ import { Nunito_Sans, Sora } from 'next/font/google';
 import 'modern-normalize/modern-normalize.css';
 import './globals.css';
 import TanStackProvider from '../components/TanStackProvider/TanStackProvider';
+import AuthProvider from '@/components/AuthProvider/AuthProvider';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
 
@@ -32,9 +33,11 @@ export default function RootLayout({
     <html lang="en" data-scroll-behavior="smooth">
       <body className={`${nunito.variable} ${sora.variable}`}>
         <TanStackProvider>
-          <Header />
-          <main>{children}</main>
-          <Footer />
+          <AuthProvider>
+            <Header />
+            <main>{children}</main>
+            <Footer />
+          </AuthProvider>
         </TanStackProvider>
       </body>
     </html>

@@ -18,7 +18,7 @@ const schema = Yup.object({
     .required('Введіть пароль'),
 });
 
-export default function LoginForm() {
+export default function LoginForm({ returnPath }: { returnPath: string }) {
   const router = useRouter();
   const setUser = useAuthStore(s => s.setUser);
 
@@ -31,7 +31,7 @@ export default function LoginForm() {
     onSuccess: user => {
       setUser(user);
       toast.success(`З поверненням, ${user.name || 'мандрівнику'}! 🌍`);
-      router.replace('/');
+      router.replace(returnPath);
     },
     onError: error => {
       const msg = error.response?.data?.message || 'Невірна пошта або пароль';

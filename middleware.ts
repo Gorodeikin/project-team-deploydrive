@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const protectedRoutes = ['/profile', '/saved', '/settings'] as const;
+const protectedRoutes = ['/saved', '/settings'] as const;
 
 const authRoutes = ['/auth/login', '/auth/register'] as const;
 
@@ -41,7 +41,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/profile/:path*',
     '/saved/:path*',
     '/settings/:path*',
     '/auth/login',

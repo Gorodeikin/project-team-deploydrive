@@ -1,11 +1,11 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   turbopack: {
     rules: {
-      "*.svg": {
-        loaders: ["@svgr/webpack"],
-        as: "*.js",
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
       },
     },
   },
@@ -13,10 +13,17 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "ftp.goit.study",
-        port: "",
-        pathname: "/img/**",
+        protocol: 'https',
+        hostname: 'ftp.goit.study',
+        port: '',
+        pathname: '/img/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/dj8oll68p/image/upload/**',
+        search: '',
       },
     ],
   },

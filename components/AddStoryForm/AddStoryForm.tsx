@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useRef } from 'react';
+import Image from 'next/image';
 import css from './AddStoryForm.module.css';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createStory, fetchCategories } from '@/lib/api/api';
@@ -13,6 +14,12 @@ import * as Yup from 'yup';
 interface StoryFormProps {
   onSuccess: (id: string) => void;
   onCancel: () => void;
+}
+
+function autoResizeTextarea(el: HTMLTextAreaElement | null) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
 }
 
 const validationSchema = Yup.object({
@@ -34,12 +41,12 @@ const validationSchema = Yup.object({
     .max(80, 'Максимум 80 символів')
     .required('Вкажіть заголовок'),
 
-  description: Yup.string()
+  categoryId: Yup.string().required('Оберіть категорію'),
+
+  body: Yup.string()
     .trim()
     .max(2500, 'Опис занадто великий — максимум 2500 символів')
     .required('Додайте опис історії'),
-
-  category: Yup.string().required('Оберіть категорію'),
 });
 
 export default function StoryForm({ onSuccess, onCancel }: StoryFormProps) {
@@ -49,15 +56,8 @@ export default function StoryForm({ onSuccess, onCancel }: StoryFormProps) {
 
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const autoResize = () => {
-    const el = bodyRef.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
-  };
-
   useEffect(() => {
-    autoResize();
+    autoResizeTextarea(bodyRef.current);
   }, []);
 
   const { data: categories, isLoading: isCategoriesLoading } = useQuery<
@@ -68,14 +68,23 @@ export default function StoryForm({ onSuccess, onCancel }: StoryFormProps) {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Tracks in-flight submission synchronously (unlike mutation.isPending,
+  // which only updates after a re-render) so two 'submit' events dispatched
+  // back-to-back in the same tick can't both slip past the guard below.
+  const isSubmittingRef = useRef(false);
+
   const mutation = useMutation({
     mutationFn: (fd: FormData) => createStory(fd),
     onSuccess: (data: CreateStoryResponse) => {
+      isSubmittingRef.current = false;
       qc.invalidateQueries({ queryKey: ['myStories'] });
       clearDraft();
       onSuccess(data.id);
     },
-    onError: () => setErrorOpen(true),
+    onError: () => {
+      isSubmittingRef.current = false;
+      setErrorOpen(true);
+    },
   });
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -85,21 +94,25 @@ export default function StoryForm({ onSuccess, onCancel }: StoryFormProps) {
       storyImage: draft.storyImage ?? null,
       title: draft.title ?? initialDraft.title,
       categoryId: draft.categoryId ?? initialDraft.categoryId,
-      shortDescription: draft.shortDescription ?? '',
       body: draft.body ?? initialDraft.body,
     },
     enableReinitialize: false,
+    validateOnMount: true,
     validationSchema,
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: values => {
+      if (isSubmittingRef.current) return;
+      if (!values.storyImage) return;
+
       const fd = new FormData();
 
-      if (values.storyImage) fd.append('storyImage', values.storyImage);
+      fd.append('img', values.storyImage);
       fd.append('title', values.title.trim());
       fd.append('category', values.categoryId);
       fd.append('article', values.body.trim());
 
+      isSubmittingRef.current = true;
       mutation.mutate(fd);
     },
   });
@@ -119,11 +132,6 @@ export default function StoryForm({ onSuccess, onCancel }: StoryFormProps) {
     };
   }, [previewUrl]);
 
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
-
   const isSaveDisabled = !formik.isValid || !formik.dirty || mutation.isPending;
 
   function updateDraft(update: Partial<typeof draft>) {
@@ -131,21 +139,37 @@ export default function StoryForm({ onSuccess, onCancel }: StoryFormProps) {
       setDraft(update);
     }, 0);
   }
-  const shortDescLength = formik.values.shortDescription?.length ?? 0;
+
+  const titleErrorId = 'title-error';
+  const categoryErrorId = 'categoryId-error';
+  const bodyErrorId = 'body-error';
+  const storyImageErrorId = 'storyImage-error';
+
   return (
-    <form className={css.form} onSubmit={formik.handleSubmit}>
+    <form className={css.form} onSubmit={formik.handleSubmit} noValidate>
       {/* Обкладинка */}
       <div className={css.formGroup}>
-        <label className={css.label}>Обкладинка статті</label>
+        <label className={css.label} htmlFor="storyImage">
+          Обкладинка статті
+        </label>
 
         <div className={css.coverRow}>
           <div className={css.coverPreview}>
             {previewUrl ? (
-              <img src={previewUrl} alt="Превʼю" className={css.coverImg} />
+              <Image
+                src={previewUrl}
+                alt="Попередній перегляд обкладинки історії"
+                width={280}
+                height={160}
+                unoptimized
+                className={css.coverImg}
+              />
             ) : (
-              <img
+              <Image
                 src="/images/avatar.webp.webp"
-                alt="Дефолтне фото"
+                alt="Стандартне зображення обкладинки історії"
+                width={280}
+                height={160}
                 className={css.coverImg}
               />
             )}
@@ -172,11 +196,15 @@ export default function StoryForm({ onSuccess, onCancel }: StoryFormProps) {
               updateDraft({ storyImage: file });
             }}
             onBlur={formik.handleBlur}
+            aria-invalid={
+              formik.touched.storyImage && !!formik.errors.storyImage
+            }
+            aria-describedby={storyImageErrorId}
           />
         </div>
 
         {formik.touched.storyImage && formik.errors.storyImage && (
-          <span className={css.error}>
+          <span id={storyImageErrorId} className={css.error}>
             {formik.errors.storyImage as string}
           </span>
         )}
@@ -199,9 +227,14 @@ export default function StoryForm({ onSuccess, onCancel }: StoryFormProps) {
           }}
           onBlur={formik.handleBlur}
           required
+          maxLength={80}
+          aria-invalid={formik.touched.title && !!formik.errors.title}
+          aria-describedby={titleErrorId}
         />
         {formik.touched.title && formik.errors.title && (
-          <span className={css.error}>{formik.errors.title}</span>
+          <span id={titleErrorId} className={css.error}>
+            {formik.errors.title}
+          </span>
         )}
       </div>
 
@@ -222,6 +255,9 @@ export default function StoryForm({ onSuccess, onCancel }: StoryFormProps) {
             updateDraft({ categoryId: e.target.value });
           }}
           onBlur={formik.handleBlur}
+          required
+          aria-invalid={formik.touched.categoryId && !!formik.errors.categoryId}
+          aria-describedby={categoryErrorId}
         >
           <option value="" disabled>
             {isCategoriesLoading ? 'Завантаження...' : 'Категорія'}
@@ -234,41 +270,10 @@ export default function StoryForm({ onSuccess, onCancel }: StoryFormProps) {
         </select>
 
         {formik.touched.categoryId && formik.errors.categoryId && (
-          <span className={css.error}>{formik.errors.categoryId}</span>
+          <span id={categoryErrorId} className={css.error}>
+            {formik.errors.categoryId}
+          </span>
         )}
-      </div>
-
-      {/* Короткий опис */}
-      <div className={css.formGroup}>
-        <label htmlFor="shortDescription" className={css.label}>
-          Короткий опис
-        </label>
-        <input
-          id="shortDescription"
-          name="shortDescription"
-          className={css.input}
-          placeholder="Введіть короткий опис"
-          value={formik.values.shortDescription}
-          onChange={e => {
-            formik.handleChange(e);
-            updateDraft({ shortDescription: e.target.value });
-          }}
-          onBlur={formik.handleBlur}
-          maxLength={61}
-          required
-        />
-
-        <div className={css.hintRow}>
-          {formik.touched.shortDescription && formik.errors.shortDescription ? (
-            <span className={css.error}>{formik.errors.shortDescription}</span>
-          ) : (
-            <span className={css.hint}>Лишилося символів: </span>
-          )}
-
-          {hydrated && (
-            <span className={css.counter}>{61 - shortDescLength}</span>
-          )}
-        </div>
       </div>
 
       {/* Історія */}
@@ -284,15 +289,20 @@ export default function StoryForm({ onSuccess, onCancel }: StoryFormProps) {
           placeholder="Ваша історія тут"
           value={formik.values.body}
           rows={1}
+          maxLength={2500}
           onChange={e => {
             formik.handleChange(e);
             updateDraft({ body: e.target.value });
-            autoResize();
+            autoResizeTextarea(bodyRef.current);
           }}
           onBlur={formik.handleBlur}
+          aria-invalid={formik.touched.body && !!formik.errors.body}
+          aria-describedby={bodyErrorId}
         />
         {formik.touched.body && formik.errors.body && (
-          <span className={css.error}>{formik.errors.body}</span>
+          <span id={bodyErrorId} className={css.error}>
+            {formik.errors.body}
+          </span>
         )}
       </div>
 

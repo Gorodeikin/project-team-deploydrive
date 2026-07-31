@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import css from './TravellerPage.module.css';
 import { TravellerClientProps } from '@/types/traveller';
+import type { User } from '@/types/user';
 import TravellerInfo from '../TravellerInfo/TravellerInfo';
 import MessageNoStories from '../MessageNoStories/MessageNoStories';
 import TravellersStories, {
@@ -9,6 +11,7 @@ import TravellersStories, {
 } from '../TravellersStories/TravellersStories';
 import axios from 'axios';
 import { mapStory } from '@/types/story';
+import { useAuthStore } from '@/lib/store/authStore';
 
 export default function TravellerPageClient({
   travellerId,
@@ -16,7 +19,22 @@ export default function TravellerPageClient({
   initialStories,
   initialHasNextPage,
 }: TravellerClientProps) {
-  const travellers = [initialTraveller];
+  const [displayedTraveller, setDisplayedTraveller] =
+    useState(initialTraveller);
+  const { user, isAuthenticated, isAuthReady, setUser } = useAuthStore();
+
+  const canEditAvatar =
+    isAuthReady && isAuthenticated && user?._id === travellerId;
+
+  const handleAvatarUpdated = (updatedUser: User) => {
+    setDisplayedTraveller(prev => ({
+      ...prev,
+      avatarUrl: updatedUser.avatarUrl ?? null,
+    }));
+    setUser(updatedUser);
+  };
+
+  const travellers = [displayedTraveller];
 
   const loadTravellerStories = async (
     page: number,
@@ -44,10 +62,12 @@ export default function TravellerPageClient({
     <>
       <TravellerInfo
         traveller={{
-          name: initialTraveller.name,
-          photo: initialTraveller.avatarUrl ?? '/images/avatar.webp.webp',
-          info: initialTraveller.description,
+          name: displayedTraveller.name,
+          photo: displayedTraveller.avatarUrl ?? '/images/avatar.webp.webp',
+          info: displayedTraveller.description,
         }}
+        canEditAvatar={canEditAvatar}
+        onAvatarUpdated={handleAvatarUpdated}
       />
 
       <div className={css.container}>

@@ -124,6 +124,170 @@
   color: #000;
 }
 
+.editProfileTrigger {
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid #000000;
+  background: #ffffff;
+  color: #000000;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+@media (hover: hover) {
+  .editProfileTrigger:hover {
+    background: #f0f0f0;
+  }
+}
+
+.editProfileTrigger:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 3px;
+}
+
+.editProfileTrigger:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.editForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+}
+
+.label {
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+  text-align: left;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #b0b0b0;
+  border-radius: 8px;
+  font-family: var(--font-family);
+  font-size: 16px;
+  color: #000000;
+  padding: 12px;
+}
+
+.input {
+  min-height: 48px;
+}
+
+.textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.input:focus-visible,
+.textarea:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+  border-color: #000000;
+}
+
+.input[aria-invalid='true'],
+.textarea[aria-invalid='true'] {
+  border-color: #d1293d;
+}
+
+.input:disabled,
+.textarea:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.counter {
+  font-size: 12px;
+  text-align: right;
+  color: #6b6b6b;
+}
+
+.fieldError {
+  font-size: 12px;
+  color: #d1293d;
+  text-align: left;
+}
+
+.actions {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.saveButton,
+.cancelButton {
+  flex: 1 1 120px;
+  min-width: 120px;
+  min-height: 44px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.saveButton {
+  border: 1px solid #000000;
+  background: #000000;
+  color: #ffffff;
+}
+
+@media (hover: hover) {
+  .saveButton:hover {
+    background: #1f1f1f;
+  }
+}
+
+.cancelButton {
+  border: 1px solid #000000;
+  background: #ffffff;
+  color: #000000;
+}
+
+@media (hover: hover) {
+  .cancelButton:hover {
+    background: #f0f0f0;
+  }
+}
+
+.saveButton:focus-visible,
+.cancelButton:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 3px;
+}
+
+.saveButton:disabled,
+.cancelButton:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 @media only screen and (min-width: 768px) {
   .wrap {
     padding: 32px 32px 0px;

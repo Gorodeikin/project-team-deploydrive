@@ -23,13 +23,22 @@ export default function TravellerPageClient({
     useState(initialTraveller);
   const { user, isAuthenticated, isAuthReady, setUser } = useAuthStore();
 
-  const canEditAvatar =
+  const canEditProfile =
     isAuthReady && isAuthenticated && user?._id === travellerId;
 
   const handleAvatarUpdated = (updatedUser: User) => {
     setDisplayedTraveller(prev => ({
       ...prev,
       avatarUrl: updatedUser.avatarUrl ?? null,
+    }));
+    setUser(updatedUser);
+  };
+
+  const handleProfileUpdated = (updatedUser: User) => {
+    setDisplayedTraveller(prev => ({
+      ...prev,
+      name: updatedUser.name,
+      description: updatedUser.description ?? '',
     }));
     setUser(updatedUser);
   };
@@ -66,8 +75,10 @@ export default function TravellerPageClient({
           photo: displayedTraveller.avatarUrl ?? '/images/avatar.webp.webp',
           info: displayedTraveller.description,
         }}
-        canEditAvatar={canEditAvatar}
+        travellerId={travellerId}
+        canEditProfile={canEditProfile}
         onAvatarUpdated={handleAvatarUpdated}
+        onProfileUpdated={handleProfileUpdated}
       />
 
       <div className={css.container}>

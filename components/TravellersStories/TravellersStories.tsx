@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import styles from './TravellersStories.module.css';
 import TravellersStoriesItem from '../TravellersStoriesItem/TravellersStoriesItem';
 import { Story } from '@/types/story';
@@ -16,6 +16,8 @@ interface Props {
   initialHasMore: boolean;
   travellers?: Traveller[];
   fetchNextPage: (page: number, limit: number) => Promise<FetchResult | null>;
+  onStoryUnsave?: (storyId: string) => void;
+  emptyState?: ReactNode;
 }
 
 export default function TravellersStories({
@@ -23,6 +25,8 @@ export default function TravellersStories({
   initialHasMore,
   fetchNextPage,
   travellers = [],
+  onStoryUnsave,
+  emptyState,
 }: Props) {
   const [stories, setStories] = useState<Story[]>(initialStories);
   const [page, setPage] = useState(1);
@@ -57,6 +61,12 @@ export default function TravellersStories({
     return () => window.removeEventListener('resize', handleResize);
   }, [page, initialStories]);
 
+  const handleSavedStateChange = (storyId: string, isSaved: boolean) => {
+    if (isSaved || !onStoryUnsave) return;
+    setStories(prev => prev.filter(s => s._id !== storyId));
+    onStoryUnsave(storyId);
+  };
+
   const handleLoadMore = async () => {
     if (!hasMore || loading) return;
     setLoading(true);
@@ -83,6 +93,10 @@ export default function TravellersStories({
     }
   };
 
+  if (stories.length === 0 && emptyState) {
+    return <>{emptyState}</>;
+  }
+
   return (
     <section className={styles.section}>
       <div className={styles.inner}>
@@ -92,6 +106,9 @@ export default function TravellersStories({
               <TravellersStoriesItem
                 story={story}
                 travellersMap={travellersMap}
+                onSavedStateChange={
+                  onStoryUnsave ? handleSavedStateChange : undefined
+                }
               />
             </li>
           ))}

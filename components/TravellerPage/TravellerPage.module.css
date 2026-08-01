@@ -16,6 +16,95 @@
   margin-bottom: 40px;
 }
 
+.tablist {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  max-width: 100%;
+}
+
+.tab {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0 0 10px;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #8b8b8b;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--color-royal-blue);
+  outline-offset: 2px;
+}
+
+.tabActive {
+  color: #000;
+  border-bottom-color: var(--color-royal-blue);
+}
+
+.savedStatusText {
+  font-family: var(--font-family);
+  font-size: 16px;
+  color: #333;
+  margin: 0;
+}
+
+.savedErrorBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.savedRetryButton {
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .savedRetryButton:hover {
+    background: #f0f0f0;
+  }
+}
+
+.savedRetryButton:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.savedEmptyBlock {
+  width: 100%;
+  max-width: 480px;
+  box-sizing: border-box;
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--color-royal-blue-lighter);
+}
+
+.savedEmptyText {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-royal-blue-dark);
+}
+
 @media only screen and (min-width: 768px) {
   .container {
     max-width: 768px;
@@ -23,6 +112,15 @@
 
   .title {
     font-size: 44px;
+  }
+
+  .tablist {
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .tab {
+    font-size: 18px;
   }
 }
 
@@ -34,5 +132,23 @@
 
   .title {
     font-size: 52px;
+  }
+
+  .tablist {
+    margin-bottom: 40px;
+  }
+
+  .tab {
+    font-size: 20px;
+  }
+}
+
+@media only screen and (max-width: 374px) {
+  .tablist {
+    gap: 10px;
+  }
+
+  .tab {
+    font-size: 14px;
   }
 }

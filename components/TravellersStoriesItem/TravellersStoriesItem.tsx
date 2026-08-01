@@ -17,6 +17,7 @@ import Loader from '../Loader/Loader';
 interface Props {
   story: Story;
   travellersMap?: Map<string, Traveller>;
+  onSavedStateChange?: (storyId: string, isSaved: boolean) => void;
 }
 
 const categories = [
@@ -38,7 +39,11 @@ const fetchUserById = async (id: string): Promise<Traveller> => {
   return data.data.user;
 };
 
-export default function TravellersStoriesItem({ story, travellersMap }: Props) {
+export default function TravellersStoriesItem({
+  story,
+  travellersMap,
+  onSavedStateChange,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -81,6 +86,8 @@ export default function TravellersStoriesItem({ story, travellersMap }: Props) {
 
       if (updatedUser) {
         setUser(updatedUser);
+        const nowSaved = updatedUser.savedStories?.includes(story._id) ?? false;
+        onSavedStateChange?.(story._id, nowSaved);
       }
     },
     onError: () => {
@@ -132,8 +139,10 @@ export default function TravellersStoriesItem({ story, travellersMap }: Props) {
   };
 
   const authorName = author?.name || story.author || 'Невідомий автор';
+  const validStoryAvatar =
+    story.avatar && story.avatar !== '/images/avatar.png' ? story.avatar : null;
   const authorAvatar =
-    author?.avatarUrl || story.avatar || '/images/avatar.webp.webp';
+    author?.avatarUrl || validStoryAvatar || '/images/avatar.webp.webp';
 
   const isLoading = saveMutation.isPending;
 

@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import css from "./TravellersList.module.css";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import axios from "axios";
-import Loader from "../Loader/Loader";
+import css from './TravellersList.module.css';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import Loader from '../Loader/Loader';
 
 interface Traveller {
   _id: string;
@@ -45,19 +45,19 @@ export default function ShowMTravellersListClientore({
       );
 
       if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
-        setTravellers((prev) => [...prev, ...res.data.data.data]);
+        setTravellers(prev => [...prev, ...res.data.data.data]);
         setPage(nextPage);
 
-        setDisplayLimit((prev) => prev + 4);
+        setDisplayLimit(prev => prev + 4);
 
         setTimeout(() => {
           const items = document.querySelectorAll(`.${css.item}`);
           const lastItem = items[items.length - 1];
-          lastItem?.scrollIntoView({ behavior: "smooth", block: "end" });
+          lastItem?.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }, 50);
       }
     } catch (err) {
-      console.error("Could not load more travellers:", err);
+      console.error('Could not load more travellers:', err);
     } finally {
       setLoading(false);
     }
@@ -92,11 +92,13 @@ export default function ShowMTravellersListClientore({
               )}
               <div className={css.itemDiv}>
                 <h4 className={css.itemTitle}>{t.name}</h4>
-                <p className={css.itemText}>{t.description || "Без опису"}</p>
+                <p className={css.itemText}>{t.description || 'Без опису'}</p>
                 <button
                   type="button"
                   className={css.itemBtn}
-                  onClick={() => router.push(`/profile/${t._id}`)}
+                  onClick={() =>
+                    router.push(`/travellers/${encodeURIComponent(t._id)}`)
+                  }
                 >
                   Переглянути профіль
                 </button>
